@@ -1,75 +1,99 @@
-from random import uniform
 import numpy as np
 import matplotlib.pyplot as plt
 
 trainingVector = []
 realData = []
-learningRate = 0.1
+realDataLabels = []
+learningRate = 0.2
 w = np.zeros((1, 3)).flatten()
-b = np.zeros((1, 3)).flatten()
+b = np.zeros(3).flatten()
 
 
-def calcRealLabel(input):
-	return NormalDistFunction()
+def calcRealLabelProb(inp):
+	labels = []
+	for x in range(1, 4):
+		labels.append(NormalDistFunction(inp, 2 * x))
+	return labels
 
 
 def createRealData():
-	for x in range(0, 50):
-		temp = uniform(0, 9)
-		label = calcRealLabel(temp)
-		sample = (temp, label)
-		realData.append(sample)
-
-
-def createTestDistForGivenY(mu, sigma):
-	vecX = np.random.normal(mu, sigma, 100)
-	vecY = 100 * [mu / 2]
-	trainingVector.extend(zip(vecX, vecY))
+	xVec = np.linspace(0, 10, 100)
+	for x in xVec:
+		labels = calcRealLabelProb(x)
+		realDataLabels.append(labels[0] / sum(labels))
+		realData.append(x)
 
 
 def createTrainingData():
 	for x in range(1, 4):
-		createTestDistForGivenY(2 * x, 1)
-	np.random.shuffle(trainingVector)
+		vecX = np.random.normal(2 * x, 1, 100)
+		vecY = 100 * [x]
+		trainingVector.extend(zip(vecX, vecY))
 
 
 def NormalDistFunction(x, a):
-	denominator = 1 / np.sqrt(2 * np.pi)
-	numerator = np.exp(-((x - 2 * a) ** 2) / 2)
-	return numerator * denominator
+	numerator = np.exp((-(((x - a) ** 2) / 2)))
+	denominator = np.sqrt(2 * np.pi)
+	return numerator / denominator
 
 
-def calcModelresultForX(x):
+# def calcSoftMaxresultForX(input):
+# 	global w, b
+# 	eval = (w * input) + b
+# 	softMax = np.exp(eval) / np.sum(np.exp(eval))
+# 	class_no = np.argmax(softMax) + 1
+# 	return (class_no, softMax.flatten())
+
+
+def calcSoftMaxresultForX(x):
+	res = 0
+	global w, b, learningRate
 	temp = (w * x) + b
-	temp = np.exp(temp) / np.sum(np.exp(temp))
-	return (np.unravel_index(temp.argmax(), temp.shape)[0], temp)
+	softMaxResult = np.exp(temp) / np.sum(np.exp(temp))
+	first = softMaxResult[0]
+	for index, classNum in enumerate(softMaxResult):
+		if (classNum > first):
+			res = index
+			first = classNum
+	return (res, softMaxResult)
 
 
-def calcNew_W_And_B(modelClassVec, originClassNum, sampleValue):
-	modelClassVec[originClassNum - 1] -= 1
-	temp = learningRate * sampleValue * modelClassVec
-	global w, b
-	w = w - temp
-	b = b - learningRate * modelClassVec
+def calcNew_W_And_B(softMaxVec, trueClassNum, sampleValue):
+	global w, b, learningRate
+	softMaxVec[trueClassNum - 1] -= 1
+	temp = learningRate * sampleValue * softMaxVec
+	for i in range(len(w)):
+		w[i] = w[i] - (temp[i])
+		b[i] = b[i] - learningRate * softMaxVec[i]
 
 
-def leranTheModel():
+def ModelTrainer():
 	for sample in trainingVector:
-		result = calcModelresultForX(sample[0])
+		result = calcSoftMaxresultForX(sample[0])
 		calcNew_W_And_B(result[1], sample[1], sample[0])
 
 
 def plotGraphs():
-	# plt.plot(, , "r--", label='Model')
-	# plt.show()
+	modelLabel = []
+
+	for x in realData:
+		temp = calcSoftMaxresultForX(x)
+		modelLabel.append(temp[1][0])
+
+	plt.plot(realData, modelLabel, "r", label='Model')
+	plt.plot(realData, realDataLabels, "b--", label='Real')
+	plt.legend(('Model', 'Real'))
+	plt.show()
 	return
 
 
 def main():
 	createTrainingData()
-	for x in range(0, 5):
-		leranTheModel()
-	createRealData()
+
+	for x in range(0, 8):
+		np.random.shuffle(trainingVector)
+		ModelTrainer()
+
 	createRealData()
 	plotGraphs()
 
