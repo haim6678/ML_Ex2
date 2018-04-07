@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 trainingVector = []
 realData = []
 realDataLabels = []
-learningRate = 0.2
+learningRate = 0.08
 w = np.zeros((1, 3)).flatten()
 b = np.zeros(3).flatten()
 
@@ -17,6 +17,7 @@ def calcRealLabelProb(inp):
 
 
 def createRealData():
+	global realData,realDataLabels
 	xVec = np.linspace(0, 10, 100)
 	for x in xVec:
 		labels = calcRealLabelProb(x)
@@ -25,6 +26,7 @@ def createRealData():
 
 
 def createTrainingData():
+	global trainingVector
 	for x in range(1, 4):
 		vecX = np.random.normal(2 * x, 1, 100)
 		vecY = 100 * [x]
@@ -35,14 +37,6 @@ def NormalDistFunction(x, a):
 	numerator = np.exp((-(((x - a) ** 2) / 2)))
 	denominator = np.sqrt(2 * np.pi)
 	return numerator / denominator
-
-
-# def calcSoftMaxresultForX(input):
-# 	global w, b
-# 	eval = (w * input) + b
-# 	softMax = np.exp(eval) / np.sum(np.exp(eval))
-# 	class_no = np.argmax(softMax) + 1
-# 	return (class_no, softMax.flatten())
 
 
 def calcSoftMaxresultForX(x):
@@ -89,7 +83,7 @@ def plotGraphs():
 
 def main():
 	createTrainingData()
-	for x in range(0, 8):
+	for x in range(0, 10):
 		np.random.shuffle(trainingVector)
 		ModelTrainer()
 
